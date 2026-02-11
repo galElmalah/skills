@@ -1,6 +1,6 @@
 # My Skills
 
-Custom agent skills for coding assistants.
+My curated list of markdowns for agents :P 
 
 ## Installation
 
@@ -11,16 +11,16 @@ Install using [Vercel's skills CLI](https://github.com/vercel-labs/skills):
 npx skills add ./path/to/my-skills
 
 # From GitHub (after pushing to a repo)
-npx skills add your-username/my-skills
+npx skills add galElmalah/skills
 
 # Install to a specific agent
-npx skills add your-username/my-skills -a claude-code
+npx skills add galElmalah/skills -a claude-code
 
 # Install globally (available across all projects)
-npx skills add your-username/my-skills -g
+npx skills add galElmalah/skills -g
 
 # List available skills before installing
-npx skills add your-username/my-skills -l
+npx skills add galElmalah/skills -l
 ```
 
 ### Other useful commands
