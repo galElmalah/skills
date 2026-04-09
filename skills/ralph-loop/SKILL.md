@@ -51,6 +51,7 @@ Copy the following assets into the target directory and customize them based on 
 1. **Copy `assets/ralph.sh`** to the target directory. Make it executable. The script is ready to use as-is — it points to `prompt.md` in the same directory.
 
 2. **Generate `prompt.md`** — Do NOT copy the template verbatim. Generate a tailored prompt based on the user's goal and workflow options. Use `assets/prompt-template.md` as structural inspiration but write instructions specific to their use case. The prompt must include:
+   - **One item per iteration** — The prompt MUST instruct the agent to handle exactly one work item per iteration, then stop. The loop harness manages iteration — the agent must not continue to the next item. Reinforce this at the top of the prompt and in the stop/completion section.
    - Reference to `items.md` as the source of truth
    - Reference to `progress.md` for tracking
    - The completion signal: `<promise>COMPLETE</promise>`

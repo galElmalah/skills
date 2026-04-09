@@ -6,6 +6,13 @@ This file is NOT meant to be copied verbatim. It shows the structural elements e
 
 ## Required Sections
 
+### 0. One Item Per Iteration
+Every generated prompt must open with a clear constraint that the agent handles exactly one work item per iteration and then stops. The loop harness will invoke the agent again for the next item. Example:
+```
+CRITICAL: Handle exactly ONE item per iteration. After updating progress, STOP. Do not pick up the next item — the loop harness will invoke you again.
+```
+This must also be reinforced in the completion/stop section (see section 7).
+
 ### 1. Source of Truth + Progress Check
 ```
 Read items.md for the full list of work items.
@@ -52,9 +59,10 @@ Update progress.md with:
 - Link to PR or output (if applicable)
 ```
 
-### 7. Completion Signal
+### 7. Completion Signal / Stop
 ```
 If all items in items.md are complete (verified via progress.md), output <promise>COMPLETE</promise> and stop.
+Otherwise, STOP IMMEDIATELY. Do not continue to the next item. The loop harness will start a new iteration.
 ```
 
 ---
