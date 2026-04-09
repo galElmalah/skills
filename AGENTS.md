@@ -24,3 +24,4 @@ skills/
 - `SKILL.md` frontmatter must include `name` and `description`
 - Assets (templates, scripts) go in an `assets/` subdirectory
 - Skills are installed to `~/.claude/skills/` by the Vercel CLI
+- When adding a new skill, update the skills table in both `README.md` and this file
