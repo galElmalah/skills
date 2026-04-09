@@ -84,12 +84,22 @@ Adapt the structure to match the use case.
 - **Description**: Add system-aware dark mode with manual toggle
 - **Files likely involved**: `src/theme/`, `src/components/ThemeProvider`
 - **Notes**: Use CSS custom properties, not Tailwind dark: prefix
+- **Acceptance criteria**:
+  - [ ] System preference detected on first load
+  - [ ] Manual toggle overrides system preference and persists
+  - [ ] All components render correctly in both themes
+  - [ ] No flash of wrong theme on page load
 
 ## FEAT-02: Export to PDF
 
 - **Description**: Allow users to export reports as PDF
 - **Files likely involved**: `src/features/reports/`, `src/lib/pdf`
 - **Notes**: Use puppeteer for server-side rendering, not client-side libraries
+- **Acceptance criteria**:
+  - [ ] Export button visible on report pages
+  - [ ] PDF output matches on-screen layout
+  - [ ] Large reports (50+ pages) export without timeout
+  - [ ] Error state shown if export fails
 ```
 
 ---
@@ -104,12 +114,19 @@ Adapt the structure to match the use case.
 - **File**: `src/components/UserProfile.tsx`
 - **Complexity**: Medium (uses lifecycle methods + context)
 - **Notes**: Has componentDidMount fetch + componentDidUpdate comparison
+- **Acceptance criteria**:
+  - [ ] Component uses hooks (useState, useEffect, useContext) instead of class lifecycle
+  - [ ] All existing tests pass without modification
+  - [ ] No behavioral regressions (fetch timing, re-render conditions)
 
 ## MIGRATE-02: SettingsPanel component
 
 - **File**: `src/components/SettingsPanel.tsx`
 - **Complexity**: Low (simple state + render)
 - **Notes**: Straightforward useState conversion
+- **Acceptance criteria**:
+  - [ ] Component converted to function with useState
+  - [ ] All existing tests pass without modification
 ```
 
 ---
@@ -120,3 +137,4 @@ Adapt the structure to match the use case.
 2. **Include enough context** — the agent should be able to act without asking questions
 3. **Priority/ordering matters** — items are processed top to bottom unless the agent groups related ones
 4. **Link to external resources** — Sentry URLs, Figma frames, API docs, etc.
+5. **Acceptance criteria** — every item except bug fixes should have clear acceptance criteria so the agent knows when the work is done
