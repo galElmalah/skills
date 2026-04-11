@@ -71,7 +71,10 @@ function safeArtifactPath(rawPath) {
 }
 
 function sendJson(res, status, payload) {
-  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store"
+  });
   res.end(JSON.stringify(payload));
 }
 
@@ -84,7 +87,10 @@ function sendFile(res, filePath) {
     }
 
     const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { "Content-Type": types[ext] || "application/octet-stream" });
+    res.writeHead(200, {
+      "Content-Type": types[ext] || "application/octet-stream",
+      "Cache-Control": "no-store"
+    });
     fs.createReadStream(filePath).pipe(res);
   });
 }

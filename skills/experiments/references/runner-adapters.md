@@ -14,6 +14,7 @@ Requirements:
 - write the final assistant text to `final_output_file`
 - print human-readable progress to stdout while the run is active
 - print the final assistant text to stdout before exiting
+- do not swallow stdout/stderr; the loop may tee it into `EXPERIMENT_STREAM_OUTPUT_FILE` for the live dashboard log pane
 - exit non-zero on failure
 
 ## Built-In Adapters

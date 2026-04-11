@@ -11,10 +11,12 @@ Recommended per-run artifacts:
 - `.eval-logs/<run>/eval.log`
 - `.eval-logs/<run>/metric.txt`
 - `.eval-logs/<run>/summary.json` when the benchmark emits structured output
+- `.eval-logs/<run>/verify.log` when correctness verification runs through the experiment harness
 - measured duration for the eval run
 - optional per-case logs
 - optional stderr or system logs
 - `.experiment-logs/iteration-<n>.raw` for runner transcripts when available
+- `.experiment-logs/iteration-<n>.log` for human-readable runner stdout/stderr
 - `.experiment-logs/iteration-<n>.txt` for final runner messages when available
 - `progress.json` for dashboard state
 
@@ -32,6 +34,7 @@ After each run, inspect:
 - zero-work behavior
 - silent failures hidden behind an aggregate score
 - per-case regressions if the benchmark emits them
+- correctness verification failures, skipped tests, or unexpectedly narrow test coverage
 
 ## Loop-Level Logs
 

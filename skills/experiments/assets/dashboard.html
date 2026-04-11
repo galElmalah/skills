@@ -321,6 +321,20 @@
       white-space: normal;
       line-height: 1.5;
     }
+    .experiment-cell {
+      min-width: 260px;
+      white-space: normal;
+      line-height: 1.5;
+    }
+    .experiment-name {
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 4px;
+    }
+    .experiment-summary {
+      color: var(--muted);
+      font-size: 12px;
+    }
     .empty {
       border: 1px dashed var(--line);
       border-radius: 12px;
@@ -399,6 +413,37 @@
       background: #f4f4f5;
       border-left-color: #18181b;
       color: #18181b;
+    }
+    .log-shell {
+      min-height: 280px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    .log-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .log-path {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .log-output {
+      overflow: auto;
+      max-height: 420px;
+      margin: 0;
+      padding: 16px;
+      background: #fafafa;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     @media (max-width: 1100px) {
       .stats {
@@ -509,6 +554,7 @@
             <thead>
               <tr>
                 <th>Run</th>
+                <th>Experiment</th>
                 <th>Status</th>
                 <th>Score</th>
                 <th>Time</th>
@@ -532,6 +578,16 @@
       </div>
     </section>
 
+    <section class="frame">
+      <div class="panel-head">
+        <div class="panel-title">Runner Output</div>
+        <div class="muted" id="runnerLogMeta">Select a run to inspect runner output</div>
+      </div>
+      <div class="log-shell" id="runnerLogPanel">
+        <div class="empty" style="margin: 16px;">Select a run to inspect the runner output captured for that iteration.</div>
+      </div>
+    </section>
+
     <div class="footnote" id="footnote">Dashboard reads progress.json every 5 seconds.</div>
   </main>
 
@@ -540,14 +596,24 @@
       selectedId: null,
       plottedRows: [],
       allRows: [],
+      data: null,
+      currentRun: null,
       selectedFileByRun: {},
       diffFilesCache: {},
-      diffTextCache: {}
+      diffTextCache: {},
+      runnerLogRequestKey: null
     };
 
     async function loadData() {
       const response = await fetch("./progress.json?ts=" + Date.now());
       if (!response.ok) throw new Error("Failed to load progress.json");
+      return response.json();
+    }
+
+    async function loadCurrentRun() {
+      const response = await fetch("./.experiment-logs/current-run.json?ts=" + Date.now(), { cache: "no-store" });
+      if (response.status === 404) return null;
+      if (!response.ok) throw new Error("Failed to load current-run.json");
       return response.json();
     }
 
@@ -593,9 +659,16 @@
     }
 
     async function fetchJson(url) {
-      const response = await fetch(url);
+      const response = await fetch(url, { cache: "no-store" });
       const body = await response.json().catch(() => ({ error: "Failed to decode response" }));
       if (!response.ok) throw new Error(body.error || "Request failed");
+      return body;
+    }
+
+    async function fetchText(url) {
+      const response = await fetch(url, { cache: "no-store" });
+      const body = await response.text();
+      if (!response.ok) throw new Error(body || "Request failed");
       return body;
     }
 
@@ -620,6 +693,7 @@
         record?.log_path,
         record?.metric_path,
         record?.summary_path,
+        record?.stream_output_path,
         record?.raw_output_path,
         record?.final_output_path
       ]);
@@ -629,14 +703,112 @@
       return `./api/artifact?path=${encodeURIComponent(pathValue)}`;
     }
 
+    function iterationNumberFromRunId(id) {
+      const match = String(id || "").match(/^EXP-(\d+)$/i);
+      if (!match) return null;
+      const value = Number.parseInt(match[1], 10);
+      return Number.isFinite(value) ? value : null;
+    }
+
+    function derivedRunnerArtifactPaths(record) {
+      const iteration = iterationNumberFromRunId(record?.id);
+      if (iteration === null) return [];
+      return [
+        `.experiment-logs/iteration-${iteration}.log`,
+        `.experiment-logs/iteration-${iteration}.txt`,
+        `.experiment-logs/iteration-${iteration}.raw`
+      ];
+    }
+
     function artifactLabel(pathValue) {
+      const normalized = String(pathValue || "").replaceAll("\\", "/");
       const name = basename(pathValue);
       if (name === "eval.log") return "See eval log";
       if (name === "metric.txt") return "See metric";
       if (name === "summary.json") return "See summary";
-      if (name.endsWith(".raw")) return "See loop transcript";
-      if (name.endsWith(".txt")) return `See ${name}`;
+      if (normalized.includes(".experiment-logs/") && name.endsWith(".log")) return "See runner log";
+      if (name.endsWith(".raw")) return "See raw transcript";
+      if (name.endsWith(".txt")) return "See final message";
       return `See ${name || "artifact"}`;
+    }
+
+    function isRunnerOutputPath(pathValue) {
+      const normalized = String(pathValue || "").replaceAll("\\", "/").toLowerCase();
+      return normalized.includes(".experiment-logs/")
+        && (normalized.endsWith(".log") || normalized.endsWith(".txt") || normalized.endsWith(".raw"));
+    }
+
+    function preferredRunnerLogPath(record) {
+      const candidates = uniqueList([
+        record?.stream_output_path,
+        record?.raw_output_path,
+        record?.final_output_path,
+        ...(record?.log_paths || []),
+        ...derivedRunnerArtifactPaths(record)
+      ]).filter(Boolean);
+
+      return candidates.find((pathValue) => isRunnerOutputPath(pathValue) && String(pathValue).endsWith(".log"))
+        || candidates.find((pathValue) => isRunnerOutputPath(pathValue) && String(pathValue).endsWith(".raw"))
+        || candidates.find((pathValue) => isRunnerOutputPath(pathValue) && String(pathValue).endsWith(".txt"))
+        || null;
+    }
+
+    function currentRunRecord() {
+      if (!state.currentRun || state.currentRun.status !== "RUNNING") return null;
+      return {
+        id: state.currentRun.experiment_id || `EXP-${String(state.currentRun.iteration || "").padStart(3, "0")}`,
+        active: true,
+        stream_output_path: state.currentRun.stream_output_path || null,
+        raw_output_path: state.currentRun.raw_output_path || null,
+        final_output_path: state.currentRun.final_output_path || null,
+        log_paths: uniqueList([
+          state.currentRun.stream_output_path,
+          state.currentRun.raw_output_path,
+          state.currentRun.final_output_path
+        ]),
+        status: "IN PROGRESS"
+      };
+    }
+
+    function formatRawRunnerLog(text) {
+      const rendered = [];
+      for (const line of String(text || "").split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        try {
+          const payload = JSON.parse(trimmed);
+          const item = payload.item || {};
+          const eventType = payload.type;
+
+          if (eventType === "item.started" && item.type === "command_execution" && item.command) {
+            rendered.push(`[cmd] ${item.command}`);
+            continue;
+          }
+
+          if (eventType === "item.completed" && item.type === "agent_message" && item.text) {
+            rendered.push(String(item.text).trim());
+            continue;
+          }
+
+          if (eventType === "error") {
+            rendered.push(`[error] ${payload.message || payload.error || trimmed}`);
+            continue;
+          }
+        } catch {
+          rendered.push(trimmed);
+          continue;
+        }
+      }
+
+      return rendered.length ? rendered.join("\n\n") : String(text || "");
+    }
+
+    function formatRunnerLogText(logPath, text) {
+      if (String(logPath || "").endsWith(".raw")) {
+        return formatRawRunnerLog(text);
+      }
+      return String(text || "");
     }
 
     function renderArtifactLinks(paths) {
@@ -653,10 +825,41 @@
       `;
     }
 
+    function experimentTitle(row) {
+      return row?.title || row?.id || "Unnamed run";
+    }
+
+    function experimentSummary(row) {
+      const text = String(row?.hypothesis || row?.lesson || row?.reason || "").trim();
+      if (!text) return "No experiment summary recorded.";
+      return text.length > 220 ? `${text.slice(0, 217)}...` : text;
+    }
+
     function buildRows(data) {
       const direction = scoreDirection(data);
       const rows = [];
       const baselineValue = num(data.summary?.baseline);
+      const recordedExperiments = [...(data.experiments || [])];
+      const activeExperiment = data.active_experiment && typeof data.active_experiment === "object"
+        ? data.active_experiment
+        : null;
+
+      if (activeExperiment?.id) {
+        const existingIndex = recordedExperiments.findIndex((exp) => exp?.id === activeExperiment.id);
+        if (existingIndex >= 0) {
+          recordedExperiments[existingIndex] = {
+            ...recordedExperiments[existingIndex],
+            ...activeExperiment,
+            status: activeExperiment.status || recordedExperiments[existingIndex]?.status || "IN PROGRESS"
+          };
+        } else {
+          recordedExperiments.push({
+            ...activeExperiment,
+            status: activeExperiment.status || "IN PROGRESS"
+          });
+        }
+      }
+
       if (baselineValue !== null) {
         const baselineDuration = (data.baseline_runs || []).reduce((sum, run) => sum + (num(run.duration_ms) || 0), 0);
         const baselineArtifacts = (data.baseline_runs || []).flatMap((run) => extractArtifactPaths(run));
@@ -676,7 +879,7 @@
       }
 
       let best = baselineValue;
-      for (const exp of data.experiments || []) {
+      for (const exp of recordedExperiments) {
         const result = num(exp.result);
         let improved = false;
         if (result !== null) {
@@ -695,9 +898,12 @@
           reason: exp.reason || exp.comparison_to_champion || exp.lesson || "",
           log_paths: extractArtifactPaths(exp),
           improved,
-          active: data.active_experiment?.id === exp.id,
+          active: activeExperiment?.id === exp.id || String(exp.status || "").toUpperCase() === "IN PROGRESS",
           parent_commit: exp.parent_commit || null,
-          candidate_commit: exp.candidate_commit || null
+          candidate_commit: exp.candidate_commit || null,
+          stream_output_path: exp.stream_output_path || null,
+          raw_output_path: exp.raw_output_path || null,
+          final_output_path: exp.final_output_path || null
         });
       }
       return rows;
@@ -820,7 +1026,7 @@
       const body = document.getElementById("historyBody");
       document.getElementById("ledgerMeta").textContent = `${rows.length} plotted runs`;
       if (!rows.length) {
-        body.innerHTML = `<tr><td colspan="6" class="muted">No recorded runs.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" class="muted">No recorded runs.</td></tr>`;
         return;
       }
       body.innerHTML = rows.map((row) => `
@@ -832,6 +1038,10 @@
           aria-label="Select ${row.id || "run"} and inspect its decision details and code diff"
         >
           <td><button class="history-button" data-select-id="${row.id}">${row.id || "—"}</button></td>
+          <td class="experiment-cell">
+            <div class="experiment-name">${escapeHtml(experimentTitle(row))}</div>
+            <div class="experiment-summary">${escapeHtml(experimentSummary(row))}</div>
+          </td>
           <td><span class="status ${statusClass(row.status)}">${row.status || "UNKNOWN"}</span></td>
           <td>${formatMetric(row.result)}</td>
           <td>${formatDuration(row.duration_ms)}</td>
@@ -840,15 +1050,10 @@
         </tr>
       `).join("");
 
-      const jumpToDiff = () => {
-        document.getElementById("diffPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      };
-
       body.querySelectorAll("tr[data-select-id]").forEach((rowNode) => {
         const id = rowNode.getAttribute("data-select-id");
         const selectFromLedger = () => {
           selectRow(id);
-          jumpToDiff();
         };
         rowNode.addEventListener("click", (event) => {
           const target = event.target;
@@ -867,7 +1072,6 @@
         button.addEventListener("click", (event) => {
           event.stopPropagation();
           selectRow(button.getAttribute("data-select-id"));
-          jumpToDiff();
         });
       });
     }
@@ -1074,11 +1278,76 @@
       }
     }
 
+    async function renderRunnerLog(row) {
+      const panel = document.getElementById("runnerLogPanel");
+      const meta = document.getElementById("runnerLogMeta");
+      const liveRun = currentRunRecord();
+      const liveRunMatchesSelection = liveRun && (!row || row.active || row.id === liveRun.id || !preferredRunnerLogPath(row));
+      const source = liveRunMatchesSelection ? { ...row, ...liveRun } : row;
+
+      if (!source) {
+        state.runnerLogRequestKey = null;
+        meta.textContent = "Select a run to inspect runner output";
+        panel.innerHTML = `<div class="empty" style="margin: 16px;">Select a run to inspect the runner output captured for that iteration.</div>`;
+        return;
+      }
+
+      const logPath = preferredRunnerLogPath(source);
+      if (!logPath) {
+        state.runnerLogRequestKey = null;
+        meta.textContent = source.active
+          ? `${source.id} is active, but no runner output path is recorded yet`
+          : `${source.id} has no recorded runner output artifact`;
+        panel.innerHTML = `
+          <div class="empty" style="margin: 16px;">
+            ${escapeHtml(source.active
+              ? "Waiting for the loop to record EXPERIMENT_STREAM_OUTPUT_FILE for this run."
+              : "No runner output log was recorded for this run.")}
+          </div>
+        `;
+        return;
+      }
+
+      const requestKey = `${row.id}:${logPath}:${Date.now()}`;
+      state.runnerLogRequestKey = requestKey;
+      meta.textContent = source.active
+        ? `${source.id} runner output. Refreshing every 5 seconds while this run is active.`
+        : `${source.id} runner output`;
+      panel.innerHTML = `
+        <div class="log-toolbar">
+          <a class="artifact-link" href="${artifactHref(logPath)}" target="_blank" rel="noreferrer noopener">Open runner log</a>
+          <div class="log-path">${escapeHtml(logPath)}</div>
+        </div>
+        <pre class="log-output" id="runnerLogOutput">Loading runner output…</pre>
+      `;
+
+      try {
+        const text = await fetchText(`${artifactHref(logPath)}&ts=${Date.now()}`);
+        if (state.runnerLogRequestKey !== requestKey) return;
+        const output = document.getElementById("runnerLogOutput");
+        if (!output) return;
+        output.textContent = formatRunnerLogText(logPath, text) || "Runner log is empty.";
+        if (source.active) {
+          output.scrollTop = output.scrollHeight;
+        }
+      } catch (error) {
+        if (state.runnerLogRequestKey !== requestKey) return;
+        panel.innerHTML = `
+          <div class="log-toolbar">
+            <a class="artifact-link" href="${artifactHref(logPath)}" target="_blank" rel="noreferrer noopener">Open runner log</a>
+            <div class="log-path">${escapeHtml(logPath)}</div>
+          </div>
+          <div class="empty" style="margin: 16px;">${escapeHtml(String(error.message || error))}</div>
+        `;
+      }
+    }
+
     function selectRow(id, rerender = true) {
       state.selectedId = id;
       const row = state.allRows.find((item) => item.id === id) || null;
       renderDetails(row);
       renderDiff(row);
+      renderRunnerLog(row);
       if (rerender) {
         renderHistory(state.allRows);
       }
@@ -1087,7 +1356,9 @@
 
     async function boot() {
       try {
-        const data = await loadData();
+        const [data, currentRun] = await Promise.all([loadData(), loadCurrentRun()]);
+        state.data = data;
+        state.currentRun = currentRun;
         const rows = buildRows(data);
         state.allRows = rows;
         renderHeader(data);
@@ -1106,7 +1377,7 @@
         }
 
         document.getElementById("footnote").textContent =
-          `Dashboard reads progress.json every 5 seconds. Total measured runtime: ${formatDuration(totalDuration(rows))}. Artifact links open from recorded log paths.`;
+          `Dashboard reads progress.json and current-run.json every 5 seconds. Selected runner output refreshes on the same cadence while a run is active. Total measured runtime: ${formatDuration(totalDuration(rows))}. Artifact links open from recorded log paths.`;
       } catch (error) {
         document.getElementById("goal").textContent = "Dashboard unavailable";
         document.getElementById("subline").textContent = String(error);

@@ -4,6 +4,8 @@
     "metric": "TODO",
     "direction": "min",
     "cheap_eval_command": "./evaluate.sh",
+    "verification_command": "",
+    "verification_policy": "required_before_keep",
     "full_eval_command": "",
     "runtime_budget": "TODO"
   },

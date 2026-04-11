@@ -45,11 +45,14 @@ Keep this file aligned with `progress.json`, which powers the dashboard.
 - Hypothesis:
 - Files touched:
 - Command:
+- Verification command:
+- Verification result:
 - Result:
 - Duration:
 - Comparison to champion:
 - Confirmation run:
-- Log paths: include eval artifacts and, when available, the loop transcript paths. Prefer paths relative to the dashboard root or repo root.
+- Log paths: include eval artifacts, verification logs, and, when available, the runner stdout/stderr log plus loop transcript paths. Prefer paths relative to the dashboard root or repo root.
+- In `progress.json`, keep `stream_output_path`, `raw_output_path`, and `final_output_path` alongside the run record so the dashboard can open the selected runner output directly.
 - Anomalies:
 - Lesson:
 -->

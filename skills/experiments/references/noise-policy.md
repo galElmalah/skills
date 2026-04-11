@@ -13,11 +13,18 @@ Metric noise is the main failure mode in iterative experimentation.
 
 Use one of these rules in `objective.md`:
 
-- absolute epsilon: keep only if improvement exceeds a fixed delta
+- champion-relative obvious win: keep immediately if the candidate clearly beats the current champion by more than obvious noise
+- absolute epsilon: keep only if improvement exceeds a fixed delta, but recompute it whenever the champion changes
 - noise band: keep only if improvement is larger than observed variation
-- confirmation mean: keep only if two runs beat the champion mean
+- confirmation mean: keep only if a couple of confirmation runs still beat the champion mean
 
-If the user has not decided, recommend a conservative policy instead of auto-promoting tiny wins.
+Avoid fixed thresholds that remain anchored to the very first baseline after the system gets much faster. That policy goes stale and will incorrectly discard real wins.
+
+If the user has not decided, recommend a flexible policy:
+
+- obvious stable wins promote immediately
+- tiny wins require confirmation runs
+- stale thresholds get recalibrated against the current champion
 
 ## Simplicity Bias
 

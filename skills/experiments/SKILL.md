@@ -9,7 +9,7 @@ description: Use this skill when the user wants to set up or run iterative exper
 
 This skill sets up and runs single-metric experiment loops.
 
-It is setup-first. Before any loop starts, define the metric, the evaluation path, the allowed edit scope, the logging artifacts, and the promotion rule. If the repo has no usable eval yet, help the user create a cheap benchmark first and recommend building a fuller benchmark before investing heavily in optimization.
+It is setup-first. Before any loop starts, define the metric, the evaluation path, the correctness verification path, the allowed edit scope, the logging artifacts, and the promotion rule. If the repo has no usable eval yet, help the user create a cheap benchmark first and recommend building a fuller benchmark before investing heavily in optimization.
 
 ## When To Use
 
@@ -41,17 +41,20 @@ Start single-worker only. Do not introduce parallel branches, worktrees, or mult
 
 Interview the user interactively. Do not dump a long questionnaire all at once unless the user asks for it.
 
-Do not silently infer the experiment contract from vague intent like “it is slow” or “quality is bad.” Before scaffolding files, confirm the metric, cheap eval, runner, write boundaries, and keep/discard rule with the user, or explicitly state the assumption and get confirmation.
+Do not silently infer the experiment contract from vague intent like “it is slow” or “quality is bad.” Before scaffolding files, confirm the metric, cheap eval, correctness verification path, runner, write boundaries, and keep/discard rule with the user, or explicitly state the assumption and get confirmation.
+
+If no correctness verification exists and the optimization can plausibly break behavior, recommend creating a minimal verification step before running the loop for real. Ask the user whether you should add that safety net instead of assuming they are comfortable optimizing without one.
 
 Ask the minimum questions needed to unblock the next setup decision. Good default order:
 
 1. What metric are we optimizing, and is lower or higher better?
 2. What is the cheapest trustworthy eval we can run repeatedly?
-3. If a fuller holdout eval exists, what is it?
-4. What files may change, and what files are frozen?
-5. Which runner should execute the loop: `claude`, `codex`, `opencode`, or a custom runner?
-6. What counts as a real win?
-7. Should winners auto-commit and losers auto-revert?
+3. What correctness verification should we run before keeping a candidate, for example tests or contract checks?
+4. If a fuller holdout eval exists, what is it?
+5. What files may change, and what files are frozen?
+6. Which runner should execute the loop: `claude`, `codex`, `opencode`, or a custom runner?
+7. What counts as a real win?
+8. Should winners auto-commit and losers auto-revert?
 
 ## Setup Workflow
 
@@ -64,6 +67,8 @@ Create a concrete experiment charter with:
 - metric name
 - metric direction: `min` or `max`
 - cheap eval command
+- correctness verification command, if any
+- correctness verification policy, for example “must pass before keep”
 - fuller eval or holdout command, if available
 - timeout or budget per run
 - allowed write scope
@@ -76,8 +81,8 @@ Use `objective.md` as the source of truth for these rules.
 If the user has not decided the promotion rule, recommend:
 
 - baseline runs: 2 if feasible
-- provisional win: beats champion by more than obvious noise
-- confirmation: rerun marginal wins once before promotion
+- obvious win: keep stable wins that clearly beat the current champion by more than obvious noise; do not block them behind a stale threshold derived from an older baseline
+- confirmation: rerun tiny or marginal wins a couple of times before promotion, and rerun the champion too if the noise estimate is stale or weak
 - crashes and timeouts: discard
 
 For metric design guidance, read [references/metric-design.md](references/metric-design.md) and [references/noise-policy.md](references/noise-policy.md).
@@ -92,6 +97,12 @@ If a cheap benchmark already exists:
 - verify the metric extraction path
 - run or recommend baseline measurement
 
+If correctness verification already exists:
+
+- verify the command
+- verify that it actually covers the behavior the loop might break
+- add it to the objective as the keep gate when appropriate
+
 If no easy eval exists:
 
 - help the user define the smallest cheap benchmark that still measures the intended behavior
@@ -100,6 +111,12 @@ If no easy eval exists:
 - run 1-2 baseline measurements if feasible
 
 When only a cheap benchmark exists, explicitly recommend stopping after setup and baseline to build a fuller benchmark or holdout eval for confidence before long optimization loops.
+
+If no correctness verification exists and the work can plausibly break behavior:
+
+- ask the user whether you should create a minimal verification step, usually tests or a contract check, before starting the loop
+- if they agree, add that verification step and capture its baseline behavior before optimization
+- if they decline, record that missing safety net explicitly in `objective.md` and recommend a tighter write scope
 
 For logging conventions, read [references/logging-patterns.md](references/logging-patterns.md).
 
@@ -168,8 +185,10 @@ Once setup is complete, the loop prompt must enforce:
 - read `objective.md` and `progress.md` first
 - keep `progress.json` current enough for the dashboard
 - inspect stdout/stderr and case-level artifacts before deciding
+- run the configured correctness verification before promotion when the objective requires it
 - keep only verified wins
 - revert losers to the current champion
+- never edit the verification step unless the objective explicitly unlocks it
 
 Before trusting the loop, validate the chosen runner with `validate-runners.sh`.
 
@@ -185,11 +204,12 @@ Each iteration should:
 4. Change only the allowed files
 5. Commit the experiment before running eval if the user wants auto-commit semantics
 6. Run the cheap eval and capture logs
-7. Inspect the logs, not just the aggregate scalar
-8. Compare against the current champion
-9. Keep or discard
-10. Update `progress.md` and `progress.json`
-11. Stop
+7. Run the configured correctness verification if the objective requires it
+8. Inspect the logs, not just the aggregate scalar
+9. Compare against the current champion
+10. Keep or discard
+11. Update `progress.md` and `progress.json`
+12. Stop
 
 One experiment per iteration is mandatory. The loop harness is responsible for invoking the next round.
 
@@ -198,10 +218,14 @@ One experiment per iteration is mandatory. The loop harness is responsible for i
 Default policy:
 
 - Keep only if the metric improves under the declared rule in `objective.md`
+- Prefer champion-relative rules over fixed deltas anchored to the original baseline
+- Keep obvious stable wins immediately when they clearly beat the current champion
 - Discard ties unless they clearly simplify the code or fix a known failure mode
-- Rerun suspicious or marginal wins once before promotion
+- Rerun suspicious, tiny, or marginal wins a couple of times before promotion
 - Discard crashes and timeouts
 - Never change frozen files just to make the metric look better
+
+If the declared rule is clearly stale relative to the current champion, stop treating the old baseline threshold as sacred. Recalibrate it or use a champion-relative confirmation policy instead of discarding an obviously better stable candidate.
 
 If the user has no strong preference, prefer simpler winners when the metric delta is very small.
 
@@ -216,6 +240,7 @@ At minimum, record:
 - hypothesis
 - files touched
 - command run
+- verification command and result, when configured
 - metric result
 - keep or discard decision
 - log paths
@@ -225,6 +250,8 @@ At minimum, record:
 Prefer log and artifact paths that are relative to the dashboard root or repo root so the UI can open them directly.
 
 When the harness exposes loop transcript paths, record them alongside eval artifacts.
+
+When the loop emits a per-iteration runner stdout/stderr log, treat it as a first-class artifact. Record it early enough that the dashboard can show live runner output for an active experiment.
 
 Keep `progress.json` updated with:
 
