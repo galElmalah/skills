@@ -1,9 +1,5 @@
-function cloneMetadata(product) {
-  return JSON.parse(JSON.stringify(product.metadata));
-}
-
 function scoreTokenAgainstProduct(token, product) {
-  const metadata = cloneMetadata(product);
+  const metadata = product.metadata;
   const haystack = [
     product.name,
     product.category,
@@ -44,8 +40,7 @@ function searchCatalog(products, query) {
       if (score > 0) {
         matches.push({
           product,
-          score,
-          snapshot: cloneMetadata(product)
+          score
         });
       }
     }
@@ -57,10 +52,7 @@ function searchCatalog(products, query) {
       return left.product.name.localeCompare(right.product.name);
     });
 
-    workingSet = matches.map((entry) => ({
-      ...entry.product,
-      metadata: entry.snapshot
-    }));
+    workingSet = matches.map((entry) => entry.product);
   }
 
   return workingSet.slice(0, 40);
