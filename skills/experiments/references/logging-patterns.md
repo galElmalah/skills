@@ -10,9 +10,12 @@ Recommended per-run artifacts:
 
 - `.eval-logs/<run>/eval.log`
 - `.eval-logs/<run>/metric.txt`
+- `.eval-logs/<run>/summary.json` when the benchmark emits structured output
 - measured duration for the eval run
 - optional per-case logs
 - optional stderr or system logs
+- `.experiment-logs/iteration-<n>.raw` for runner transcripts when available
+- `.experiment-logs/iteration-<n>.txt` for final runner messages when available
 - `progress.json` for dashboard state
 
 Recommended convenience symlink:
@@ -49,3 +52,4 @@ Prefer:
 - ignored artifacts
 - experiment ledgers that are not deleted by reset operations
 - a local dashboard fed by a machine-readable status file
+- artifact paths in `progress.json` that are relative to the dashboard root or repo root so the UI can open them directly

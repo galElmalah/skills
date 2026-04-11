@@ -41,6 +41,8 @@ Start single-worker only. Do not introduce parallel branches, worktrees, or mult
 
 Interview the user interactively. Do not dump a long questionnaire all at once unless the user asks for it.
 
+Do not silently infer the experiment contract from vague intent like “it is slow” or “quality is bad.” Before scaffolding files, confirm the metric, cheap eval, runner, write boundaries, and keep/discard rule with the user, or explicitly state the assumption and get confirmation.
+
 Ask the minimum questions needed to unblock the next setup decision. Good default order:
 
 1. What metric are we optimizing, and is lower or higher better?
@@ -136,9 +138,13 @@ Also set up log directories when appropriate:
 
 Prefer keeping logs and experiment ledgers outside the revert path so discarded experiments remain visible.
 
+If the experiment workspace or log directories live inside a git repo but should stay local, add them to `.git/info/exclude` or the repo `.gitignore` during setup so `git status` stays focused on candidate code. Prefer `.git/info/exclude` when the ignore should remain local-only.
+
 The dashboard should be accessible by default. Use `progress.json` as the machine-readable source for the dashboard and keep it aligned with `progress.md`.
 
 The loop should also be runner-selectable by default. Do not hardcode Claude if the user wants Codex, OpenCode, or a custom backend.
+
+If the experiment control files live in a dedicated subdirectory like `.experiments/`, set `EXPERIMENT_WORKSPACE_ROOT` so runners execute from the actual project root while the dashboard still serves the experiment assets.
 
 ### Step 4: Initialize The Baseline
 
@@ -166,6 +172,8 @@ Once setup is complete, the loop prompt must enforce:
 - revert losers to the current champion
 
 Before trusting the loop, validate the chosen runner with `validate-runners.sh`.
+
+Once the loop starts, let the loop own the iteration. Do not manually update `progress.md`, `progress.json`, candidate code, or eval results mid-run unless the user explicitly asks you to interrupt or debug the loop itself.
 
 ## Iteration Rules
 
@@ -214,6 +222,10 @@ At minimum, record:
 - anomalies
 - lesson learned
 
+Prefer log and artifact paths that are relative to the dashboard root or repo root so the UI can open them directly.
+
+When the harness exposes loop transcript paths, record them alongside eval artifacts.
+
 Keep `progress.json` updated with:
 
 - summary metrics
@@ -235,6 +247,8 @@ If the user wants automatic experiment selection semantics, recommend:
 - do not commit bulky logs
 
 Keep `objective.md`, `progress.md`, `progress.json`, and logs outside destructive reset paths when possible.
+
+If there is no holdout eval and a kept win is very large, explicitly recommend a broader follow-up benchmark before treating the result as representative outside the cheap eval.
 
 ## File Reference
 

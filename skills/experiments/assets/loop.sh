@@ -9,6 +9,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_FILE="$SCRIPT_DIR/prompt.md"
+WORKSPACE_ROOT="${EXPERIMENT_WORKSPACE_ROOT:-$SCRIPT_DIR}"
 RUNNER_NAME="${EXPERIMENT_RUNNER:-claude}"
 RUNNER_SCRIPT="${EXPERIMENT_RUNNER_SCRIPT:-$SCRIPT_DIR/runners/$RUNNER_NAME.sh}"
 LOG_ROOT="${EXPERIMENT_LOG_ROOT:-$SCRIPT_DIR/.experiment-logs}"
@@ -24,6 +25,7 @@ if [ ! -x "$RUNNER_SCRIPT" ]; then
 fi
 
 mkdir -p "$LOG_ROOT"
+export EXPERIMENT_WORKSPACE_ROOT="$WORKSPACE_ROOT"
 
 for ((i=1; i<=$1; i++)); do
   echo ""
@@ -36,6 +38,13 @@ for ((i=1; i<=$1; i++)); do
   final_file="$LOG_ROOT/iteration-$i.txt"
 
   rm -f "$raw_file" "$final_file"
+  export EXPERIMENT_ITERATION="$i"
+  export EXPERIMENT_RAW_OUTPUT_FILE="$raw_file"
+  export EXPERIMENT_FINAL_OUTPUT_FILE="$final_file"
+  echo "runner: $RUNNER_NAME"
+  echo "workspace root: $EXPERIMENT_WORKSPACE_ROOT"
+  echo "raw transcript: $raw_file"
+  echo "final output: $final_file"
   "$RUNNER_SCRIPT" "$PROMPT_FILE" "$raw_file" "$final_file"
   result="$(cat "$final_file" 2>/dev/null || true)"
 

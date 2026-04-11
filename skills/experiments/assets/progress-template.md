@@ -24,7 +24,7 @@ Keep this file aligned with `progress.json`, which powers the dashboard.
 - Result:
 - Duration:
 - Noise notes:
-- Log paths:
+- Log paths: prefer paths relative to the dashboard root or repo root so the UI can open them directly.
 
 ## Current Champion
 
@@ -49,7 +49,7 @@ Keep this file aligned with `progress.json`, which powers the dashboard.
 - Duration:
 - Comparison to champion:
 - Confirmation run:
-- Log paths:
+- Log paths: include eval artifacts and, when available, the loop transcript paths. Prefer paths relative to the dashboard root or repo root.
 - Anomalies:
 - Lesson:
 -->

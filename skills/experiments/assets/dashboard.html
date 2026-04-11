@@ -221,6 +221,29 @@
       line-height: 1.5;
       word-break: break-word;
     }
+    .artifact-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .artifact-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 12px;
+      line-height: 1.3;
+      background: #fff;
+    }
+    .artifact-link:hover,
+    .artifact-link:focus {
+      background: var(--soft);
+      outline: none;
+    }
     .status {
       display: inline-flex;
       align-items: center;
@@ -580,12 +603,63 @@
       return data.objective?.direction === "min" ? "min" : "max";
     }
 
+    function uniqueList(values) {
+      return Array.from(new Set((values || []).filter(Boolean)));
+    }
+
+    function basename(value) {
+      return String(value || "")
+        .split(/[\\/]/)
+        .filter(Boolean)
+        .pop() || String(value || "");
+    }
+
+    function extractArtifactPaths(record) {
+      return uniqueList([
+        ...(record?.log_paths || []),
+        record?.log_path,
+        record?.metric_path,
+        record?.summary_path,
+        record?.raw_output_path,
+        record?.final_output_path
+      ]);
+    }
+
+    function artifactHref(pathValue) {
+      return `./api/artifact?path=${encodeURIComponent(pathValue)}`;
+    }
+
+    function artifactLabel(pathValue) {
+      const name = basename(pathValue);
+      if (name === "eval.log") return "See eval log";
+      if (name === "metric.txt") return "See metric";
+      if (name === "summary.json") return "See summary";
+      if (name.endsWith(".raw")) return "See loop transcript";
+      if (name.endsWith(".txt")) return `See ${name}`;
+      return `See ${name || "artifact"}`;
+    }
+
+    function renderArtifactLinks(paths) {
+      const items = uniqueList(paths);
+      if (!items.length) {
+        return `<div class="small muted">No run logs recorded.</div>`;
+      }
+      return `
+        <div class="artifact-links">
+          ${items.map((pathValue) => `
+            <a class="artifact-link" href="${artifactHref(pathValue)}" target="_blank" rel="noreferrer noopener">${escapeHtml(artifactLabel(pathValue))}</a>
+          `).join("")}
+        </div>
+      `;
+    }
+
     function buildRows(data) {
       const direction = scoreDirection(data);
       const rows = [];
       const baselineValue = num(data.summary?.baseline);
       if (baselineValue !== null) {
         const baselineDuration = (data.baseline_runs || []).reduce((sum, run) => sum + (num(run.duration_ms) || 0), 0);
+        const baselineArtifacts = (data.baseline_runs || []).flatMap((run) => extractArtifactPaths(run));
         rows.push({
           id: "BASELINE",
           title: "Baseline",
@@ -595,6 +669,7 @@
           reason: "Initial reference point before mutations.",
           lesson: "",
           files_touched: [],
+          log_paths: uniqueList(baselineArtifacts),
           improved: true,
           active: false
         });
@@ -617,6 +692,8 @@
           ...exp,
           result,
           duration_ms: num(exp.duration_ms),
+          reason: exp.reason || exp.comparison_to_champion || exp.lesson || "",
+          log_paths: extractArtifactPaths(exp),
           improved,
           active: data.active_experiment?.id === exp.id,
           parent_commit: exp.parent_commit || null,
@@ -661,6 +738,8 @@
       const baseline = formatMetric(data.summary?.baseline);
       const latest = rows.length ? rows[rows.length - 1] : null;
       const active = data.active_experiment?.id || "none";
+      const holdout = String(data.objective?.full_eval_command || "").trim();
+      const kept = Number(data.summary?.kept || 0);
       const summary = `
         This dashboard tracks one scalar metric: <strong>${metric}</strong>. The goal is simple: ${direction}. The <strong>champion</strong> is the best accepted run so far, not just the latest attempt. Every experiment is measured, judged against the champion, and then either <strong>kept</strong> or <strong>discarded</strong>. The chart shows both all attempts and the improvement frontier, while the ledger explains why a decision was made.
       `;
@@ -671,6 +750,7 @@
         ["Champion", `Best accepted run so far. Current champion score: ${champion}.`],
         ["Active Run", active === "none" ? "No experiment is currently marked as active." : `${active} is currently in progress or awaiting a decision.`],
         ["Keep / Discard", "A run is kept only if it beats the champion under the experiment rule. Otherwise it is discarded, even if it looks interesting."],
+        ["Holdout", holdout ? `Configured via ${holdout}.` : kept > 0 ? "No holdout is configured yet. A kept win exists, so add a broader eval before trusting the cheap benchmark outside the loop." : "No holdout is configured yet."],
         ["Time To Determine", `How long the eval took before a decision could be made. Total measured time so far: ${formatDuration(totalDuration(rows))}.`],
         ["Latest Decision", latest ? `${latest.id} is the latest plotted run and is currently marked ${String(latest.status || "unknown").toLowerCase()}.` : "No decisions have been recorded yet."]
       ];
@@ -695,6 +775,7 @@
       const files = (row.files_touched || []).length
         ? `<div class="small">${row.files_touched.join("<br>")}</div>`
         : `<div class="small muted">No file list recorded.</div>`;
+      const artifacts = renderArtifactLinks(row.log_paths || []);
       const reason = row.reason || row.lesson || "No decision note recorded.";
       el.innerHTML = `
         <div class="detail">
@@ -726,6 +807,10 @@
           <div class="detail-row">
             <div class="label">files touched</div>
             ${files}
+          </div>
+          <div class="detail-row">
+            <div class="label">see run logs</div>
+            ${artifacts}
           </div>
         </div>
       `;
@@ -1021,7 +1106,7 @@
         }
 
         document.getElementById("footnote").textContent =
-          `Dashboard reads progress.json every 5 seconds. Total measured runtime: ${formatDuration(totalDuration(rows))}.`;
+          `Dashboard reads progress.json every 5 seconds. Total measured runtime: ${formatDuration(totalDuration(rows))}. Artifact links open from recorded log paths.`;
       } catch (error) {
         document.getElementById("goal").textContent = "Dashboard unavailable";
         document.getElementById("subline").textContent = String(error);

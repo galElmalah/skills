@@ -1,5 +1,7 @@
 CRITICAL: Handle exactly ONE experiment per iteration. After updating `progress.md` and `progress.json`, STOP. Do not propose or execute a second experiment in the same iteration.
 
+During an active iteration, the loop is the only writer for `progress.md`, `progress.json`, candidate code, and the eval decision. Do not assume a human will patch those files while you are running.
+
 Read `objective.md` first.
 Read `progress.md` second.
 Read `progress.json` third.
@@ -16,6 +18,7 @@ Rules:
 - One idea family only.
 - Prefer the smallest plausible change with high information value.
 - Do not repeat an experiment already discarded in `progress.md` unless the new variant is materially different and you explain why.
+- If `EXPERIMENT_RAW_OUTPUT_FILE`, `EXPERIMENT_FINAL_OUTPUT_FILE`, or `EXPERIMENT_ITERATION` are available, record them in the experiment log paths when you update `progress.md` and `progress.json`.
 - Capture stdout/stderr from the eval run.
 - Inspect logs and artifacts before deciding.
 - Do not trust the scalar alone if the logs suggest failure, zero-work behavior, or a broken flow.
@@ -31,7 +34,8 @@ Workflow:
 7. Read the emitted logs and artifacts.
 8. If the result is a verified win under the promotion rule, keep it.
 9. Otherwise revert to the current champion.
-10. Update `progress.md` and `progress.json` with the result, duration, evidence, lesson, and commit pair (`parent_commit`, `candidate_commit`) when available.
+10. Update `progress.md` and `progress.json` with the result, duration, evidence, lesson, log paths, and commit pair (`parent_commit`, `candidate_commit`) when available.
+11. If the run is kept and no holdout eval is configured, record a follow-up recommendation when the win is large enough that overfitting risk is real.
 11. STOP.
 
 Keep / discard:

@@ -65,4 +65,6 @@ Frozen files or directories:
 ## Notes
 
 - Start with the cheap benchmark.
+- If the experiment workspace or its log directories live inside the repo but should stay local, add them to `.git/info/exclude` or the repo `.gitignore` before the first loop run so `git status` stays focused on candidate code.
 - If only the cheap benchmark exists, recommend building a fuller benchmark before long optimization loops.
+- After any very large kept win on the cheap benchmark, add a holdout follow-up before treating the result as representative.
