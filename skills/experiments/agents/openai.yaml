@@ -1,0 +1,4 @@
+interface:
+  display_name: "Experiments"
+  short_description: "Set up and run metric experiments"
+  default_prompt: "Use $experiments to define a metric, scaffold an experiment loop, and iteratively improve the current champion."

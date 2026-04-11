@@ -1,0 +1,9 @@
+{
+  "name": "tests-project",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Dummy project with intentionally slow tests for experiments.",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  }
+}

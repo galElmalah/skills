@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Experiments Dashboard</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #09090b;
+      --muted: #71717a;
+      --line: #e4e4e7;
+      --line-strong: #18181b;
+      --panel: #ffffff;
+      --soft: #fafafa;
+      --radius: 14px;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    body {
+      padding: 24px;
+    }
+    main {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    .frame {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+    .header {
+      padding: 20px 22px 18px;
+      display: grid;
+      gap: 10px;
+    }
+    .kicker {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 5vw, 44px);
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+    .subline {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      max-width: 96ch;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+    }
+    .stat {
+      padding: 14px 16px 16px;
+      min-height: 84px;
+      border-right: 1px solid var(--line);
+      display: grid;
+      align-content: start;
+      gap: 8px;
+    }
+    .stat:last-child {
+      border-right: 0;
+    }
+    .label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .value {
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      word-break: break-word;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.8fr);
+      gap: 16px;
+    }
+    .primer {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: 0;
+    }
+    .primer-copy,
+    .primer-terms {
+      padding: 18px 20px;
+    }
+    .primer-copy {
+      border-right: 1px solid var(--line);
+    }
+    .primer-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .primer-text {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--fg);
+      max-width: 64ch;
+    }
+    .primer-text strong,
+    .primer-text code {
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.96em;
+    }
+    .term-list {
+      display: grid;
+      gap: 10px;
+    }
+    .term {
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr);
+      gap: 14px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+    .term:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+    .term-name {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .term-value {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .panel-body {
+      padding: 18px;
+    }
+    .chart-wrap {
+      position: relative;
+    }
+    #tooltip {
+      position: absolute;
+      min-width: 220px;
+      max-width: 280px;
+      pointer-events: none;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      display: none;
+      z-index: 2;
+    }
+    #tooltip strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .detail {
+      display: grid;
+      gap: 14px;
+    }
+    .detail-title {
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .detail-row {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: var(--soft);
+    }
+    .detail-row .label {
+      margin-bottom: 6px;
+    }
+    .detail-row .small {
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      width: fit-content;
+      background: #fff;
+    }
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+    }
+    .status.kept::before,
+    .status.baseline::before {
+      background: #111;
+    }
+    .status.in-progress::before {
+      background: repeating-linear-gradient(45deg, #111 0 2px, #fff 2px 4px);
+    }
+    .status.discarded::before,
+    .status.crashed::before {
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 11px 12px;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+    th {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+      font-size: 11px;
+    }
+    tr:hover td {
+      background: var(--soft);
+    }
+    tr[data-select-id] {
+      cursor: pointer;
+    }
+    tr.is-selected td {
+      background: #f4f4f5;
+    }
+    tr.is-diffable td:first-child::after {
+      content: " open diff";
+      color: var(--muted);
+      font-size: 11px;
+      margin-left: 6px;
+    }
+    .history-button {
+      all: unset;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      font-weight: 600;
+    }
+    .files {
+      color: var(--muted);
+      white-space: normal;
+      line-height: 1.5;
+    }
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footnote {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 2px;
+    }
+    .diff-shell {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      min-height: 360px;
+    }
+    .diff-files {
+      border-right: 1px solid var(--line);
+      padding: 0;
+    }
+    .diff-file-button {
+      all: unset;
+      display: block;
+      width: 100%;
+      padding: 12px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--fg);
+      word-break: break-word;
+    }
+    .diff-file-button:hover,
+    .diff-file-button.is-selected {
+      background: #f4f4f5;
+    }
+    .diff-view {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    .diff-meta {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .diff-lines {
+      overflow: auto;
+      max-height: 560px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .diff-line {
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding: 0 16px;
+      border-left: 2px solid transparent;
+    }
+    .diff-line.meta {
+      color: var(--muted);
+      background: #fafafa;
+      border-left-color: #d4d4d8;
+    }
+    .diff-line.added {
+      background: #fafafa;
+      border-left-color: #18181b;
+    }
+    .diff-line.removed {
+      background: #f4f4f5;
+      border-left-color: #71717a;
+    }
+    .diff-line.hunk {
+      background: #f4f4f5;
+      border-left-color: #18181b;
+      color: #18181b;
+    }
+    @media (max-width: 1100px) {
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .stat:nth-child(2n) {
+        border-right: 0;
+      }
+      .stat:nth-child(n + 3) {
+        border-top: 1px solid var(--line);
+      }
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .primer {
+        grid-template-columns: 1fr;
+      }
+      .primer-copy {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .diff-shell {
+        grid-template-columns: 1fr;
+      }
+      .diff-files {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+    }
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+      .stats {
+        grid-template-columns: 1fr;
+      }
+      .stat {
+        border-right: 0;
+        border-top: 1px solid var(--line);
+      }
+      .stat:first-child {
+        border-top: 0;
+      }
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+      .term {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="frame">
+      <div class="header">
+        <div class="kicker">Experiments / Dashboard</div>
+        <h1 id="goal">Loading…</h1>
+        <div class="subline" id="subline">Waiting for progress.json.</div>
+      </div>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="frame primer">
+      <div class="primer-copy">
+        <div class="primer-title">How To Read This</div>
+        <div class="primer-text" id="primerSummary">
+          Waiting for progress.json.
+        </div>
+      </div>
+      <div class="primer-terms">
+        <div class="term-list" id="termList"></div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="frame">
+        <div class="panel-head">
+          <div class="panel-title">Benchmark Progression</div>
+          <div class="muted" id="chartMeta">No data yet</div>
+        </div>
+        <div class="panel-body chart-wrap">
+          <div id="tooltip"></div>
+          <svg id="chart" viewBox="0 0 980 360" width="100%" height="360" aria-label="Experiment progression chart"></svg>
+        </div>
+      </article>
+
+      <aside class="frame">
+        <div class="panel-head">
+          <div class="panel-title">Selected Run</div>
+          <div class="muted" id="selectionHint">Hover a dot or row</div>
+        </div>
+        <div class="panel-body" id="detailPanel">
+          <div class="empty">Select an experiment run to inspect its score, runtime, files, and decision reason.</div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="frame">
+      <div class="panel-head">
+        <div class="panel-title">Decision Ledger</div>
+        <div class="muted" id="ledgerMeta">0 runs</div>
+      </div>
+      <div class="panel-body" style="padding: 0;">
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Run</th>
+                <th>Status</th>
+                <th>Score</th>
+                <th>Time</th>
+                <th>Reason</th>
+                <th>Files</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="frame">
+      <div class="panel-head">
+        <div class="panel-title">Code Diff</div>
+        <div class="muted" id="diffMeta">Click a kept or discarded experiment to inspect its code diff</div>
+      </div>
+      <div class="diff-shell" id="diffPanel">
+        <div class="empty" style="margin: 16px;">Click an experiment row with <code>parent_commit</code> and <code>candidate_commit</code> to inspect the file diffs.</div>
+      </div>
+    </section>
+
+    <div class="footnote" id="footnote">Dashboard reads progress.json every 5 seconds.</div>
+  </main>
+
+  <script>
+    const state = {
+      selectedId: null,
+      plottedRows: [],
+      allRows: [],
+      selectedFileByRun: {},
+      diffFilesCache: {},
+      diffTextCache: {}
+    };
+
+    async function loadData() {
+      const response = await fetch("./progress.json?ts=" + Date.now());
+      if (!response.ok) throw new Error("Failed to load progress.json");
+      return response.json();
+    }
+
+    function num(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function formatMetric(value) {
+      const n = num(value);
+      if (n === null) return "—";
+      if (Math.abs(n) <= 1) return `${(n * 100).toFixed(1)}%`;
+      return `${n.toFixed(2)}`;
+    }
+
+    function formatDuration(ms) {
+      const n = num(ms);
+      if (n === null) return "—";
+      if (n < 1000) return `${Math.round(n)}ms`;
+      const totalSeconds = Math.round(n / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      if (minutes === 0) return `${seconds}s`;
+      return `${minutes}m ${seconds}s`;
+    }
+
+    function formatScoreDelta(delta) {
+      const n = num(delta);
+      if (n === null || n === 0) return "—";
+      if (Math.abs(n) <= 1) return `${n > 0 ? "+" : ""}${(n * 100).toFixed(1)}pp`;
+      return `${n > 0 ? "+" : ""}${n.toFixed(2)}`;
+    }
+
+    function totalDuration(rows) {
+      return rows.reduce((sum, row) => sum + (num(row.duration_ms) || 0), 0);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url);
+      const body = await response.json().catch(() => ({ error: "Failed to decode response" }));
+      if (!response.ok) throw new Error(body.error || "Request failed");
+      return body;
+    }
+
+    function scoreDirection(data) {
+      return data.objective?.direction === "min" ? "min" : "max";
+    }
+
+    function buildRows(data) {
+      const direction = scoreDirection(data);
+      const rows = [];
+      const baselineValue = num(data.summary?.baseline);
+      if (baselineValue !== null) {
+        const baselineDuration = (data.baseline_runs || []).reduce((sum, run) => sum + (num(run.duration_ms) || 0), 0);
+        rows.push({
+          id: "BASELINE",
+          title: "Baseline",
+          status: "BASELINE",
+          result: baselineValue,
+          duration_ms: baselineDuration || null,
+          reason: "Initial reference point before mutations.",
+          lesson: "",
+          files_touched: [],
+          improved: true,
+          active: false
+        });
+      }
+
+      let best = baselineValue;
+      for (const exp of data.experiments || []) {
+        const result = num(exp.result);
+        let improved = false;
+        if (result !== null) {
+          if (best === null) {
+            improved = true;
+            best = result;
+          } else if (direction === "max" ? result > best : result < best) {
+            improved = true;
+            best = result;
+          }
+        }
+        rows.push({
+          ...exp,
+          result,
+          duration_ms: num(exp.duration_ms),
+          improved,
+          active: data.active_experiment?.id === exp.id,
+          parent_commit: exp.parent_commit || null,
+          candidate_commit: exp.candidate_commit || null
+        });
+      }
+      return rows;
+    }
+
+    function renderStats(data, rows) {
+      const stats = [
+        ["metric", data.objective?.metric || "TODO"],
+        ["direction", data.objective?.direction || "—"],
+        ["baseline", formatMetric(data.summary?.baseline)],
+        ["champion", formatMetric(data.summary?.champion_score)],
+        ["iterations", data.summary?.iterations ?? 0],
+        ["kept / discarded", `${data.summary?.kept ?? 0} / ${data.summary?.discarded ?? 0}`],
+        ["measured time", formatDuration(totalDuration(rows))]
+      ];
+      document.getElementById("stats").innerHTML = stats.map(([label, value]) => `
+        <div class="stat">
+          <div class="label">${label}</div>
+          <div class="value">${value}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderHeader(data) {
+      document.getElementById("goal").textContent = data.objective?.goal || "Experiment Objective";
+      const metric = data.objective?.metric || "metric";
+      const direction = data.objective?.direction || "max";
+      const cheap = data.objective?.cheap_eval_command || "./evaluate.sh";
+      const full = data.objective?.full_eval_command || "not set";
+      document.getElementById("subline").innerHTML =
+        `Optimizing <strong>${metric}</strong> (${direction}) via <code>${cheap}</code>. Holdout: <code>${full}</code>.`;
+    }
+
+    function renderPrimer(data, rows) {
+      const metric = data.objective?.metric || "metric";
+      const direction = data.objective?.direction === "min" ? "lower is better" : "higher is better";
+      const champion = formatMetric(data.summary?.champion_score);
+      const baseline = formatMetric(data.summary?.baseline);
+      const latest = rows.length ? rows[rows.length - 1] : null;
+      const active = data.active_experiment?.id || "none";
+      const summary = `
+        This dashboard tracks one scalar metric: <strong>${metric}</strong>. The goal is simple: ${direction}. The <strong>champion</strong> is the best accepted run so far, not just the latest attempt. Every experiment is measured, judged against the champion, and then either <strong>kept</strong> or <strong>discarded</strong>. The chart shows both all attempts and the improvement frontier, while the ledger explains why a decision was made.
+      `;
+      document.getElementById("primerSummary").innerHTML = summary;
+
+      const terms = [
+        ["Metric", `${metric} is the score being optimized. Current baseline: ${baseline}.`],
+        ["Champion", `Best accepted run so far. Current champion score: ${champion}.`],
+        ["Active Run", active === "none" ? "No experiment is currently marked as active." : `${active} is currently in progress or awaiting a decision.`],
+        ["Keep / Discard", "A run is kept only if it beats the champion under the experiment rule. Otherwise it is discarded, even if it looks interesting."],
+        ["Time To Determine", `How long the eval took before a decision could be made. Total measured time so far: ${formatDuration(totalDuration(rows))}.`],
+        ["Latest Decision", latest ? `${latest.id} is the latest plotted run and is currently marked ${String(latest.status || "unknown").toLowerCase()}.` : "No decisions have been recorded yet."]
+      ];
+      document.getElementById("termList").innerHTML = terms.map(([name, value]) => `
+        <div class="term">
+          <div class="term-name">${name}</div>
+          <div class="term-value">${value}</div>
+        </div>
+      `).join("");
+    }
+
+    function statusClass(status) {
+      return String(status || "").toLowerCase().replace(/\s+/g, "-");
+    }
+
+    function renderDetails(row) {
+      const el = document.getElementById("detailPanel");
+      if (!row) {
+        el.innerHTML = `<div class="empty">Select an experiment run to inspect its score, runtime, files, and decision reason.</div>`;
+        return;
+      }
+      const files = (row.files_touched || []).length
+        ? `<div class="small">${row.files_touched.join("<br>")}</div>`
+        : `<div class="small muted">No file list recorded.</div>`;
+      const reason = row.reason || row.lesson || "No decision note recorded.";
+      el.innerHTML = `
+        <div class="detail">
+          <div class="status ${statusClass(row.status)}">${row.status || "UNKNOWN"}</div>
+          <div class="detail-title">${row.title || row.id || "Unnamed run"}</div>
+          <div class="muted">${row.hypothesis || reason}</div>
+          <div class="detail-grid">
+            <div class="detail-row">
+              <div class="label">run</div>
+              <div class="small">${row.id || "—"}</div>
+            </div>
+            <div class="detail-row">
+              <div class="label">score</div>
+              <div class="small">${formatMetric(row.result)}</div>
+            </div>
+            <div class="detail-row">
+              <div class="label">time to determine</div>
+              <div class="small">${formatDuration(row.duration_ms)}</div>
+            </div>
+            <div class="detail-row">
+              <div class="label">improved champion</div>
+              <div class="small">${row.improved ? "yes" : "no"}</div>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="label">decision</div>
+            <div class="small">${reason}</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">files touched</div>
+            ${files}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderHistory(rows) {
+      const body = document.getElementById("historyBody");
+      document.getElementById("ledgerMeta").textContent = `${rows.length} plotted runs`;
+      if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="6" class="muted">No recorded runs.</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map((row) => `
+        <tr
+          data-row-id="${row.id}"
+          data-select-id="${row.id}"
+          tabindex="0"
+          class="${state.selectedId === row.id ? "is-selected" : ""} ${row.parent_commit && row.candidate_commit ? "is-diffable" : ""}"
+          aria-label="Select ${row.id || "run"} and inspect its decision details and code diff"
+        >
+          <td><button class="history-button" data-select-id="${row.id}">${row.id || "—"}</button></td>
+          <td><span class="status ${statusClass(row.status)}">${row.status || "UNKNOWN"}</span></td>
+          <td>${formatMetric(row.result)}</td>
+          <td>${formatDuration(row.duration_ms)}</td>
+          <td>${row.reason || row.lesson || "—"}</td>
+          <td class="files">${(row.files_touched || []).join(", ") || "—"}</td>
+        </tr>
+      `).join("");
+
+      const jumpToDiff = () => {
+        document.getElementById("diffPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+
+      body.querySelectorAll("tr[data-select-id]").forEach((rowNode) => {
+        const id = rowNode.getAttribute("data-select-id");
+        const selectFromLedger = () => {
+          selectRow(id);
+          jumpToDiff();
+        };
+        rowNode.addEventListener("click", (event) => {
+          const target = event.target;
+          if (target instanceof HTMLElement && target.closest(".history-button")) return;
+          selectFromLedger();
+        });
+        rowNode.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectFromLedger();
+          }
+        });
+      });
+
+      body.querySelectorAll(".history-button").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          selectRow(button.getAttribute("data-select-id"));
+          jumpToDiff();
+        });
+      });
+    }
+
+    function renderChart(rows, direction) {
+      const svg = document.getElementById("chart");
+      const chartMeta = document.getElementById("chartMeta");
+      const tooltip = document.getElementById("tooltip");
+
+      const numericRows = rows.filter((row) => num(row.result) !== null);
+      state.plottedRows = numericRows;
+      chartMeta.textContent = `${numericRows.length} measured runs`;
+
+      if (!numericRows.length) {
+        svg.innerHTML = `<text x="24" y="40" fill="#71717a" font-size="14">No numeric experiment results recorded yet.</text>`;
+        tooltip.style.display = "none";
+        return;
+      }
+
+      const values = numericRows.map((row) => row.result);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = Math.max(max - min, 0.0001);
+
+      const width = 980;
+      const height = 360;
+      const left = 64;
+      const right = 24;
+      const top = 22;
+      const bottom = 48;
+      const innerW = width - left - right;
+      const innerH = height - top - bottom;
+
+      const grid = 5;
+      const points = numericRows.map((row, index) => {
+        const x = left + (innerW * index) / Math.max(numericRows.length - 1, 1);
+        const y = top + ((max - row.result) / span) * innerH;
+        return { ...row, x, y };
+      });
+
+      const path = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+
+      const gridLines = Array.from({ length: grid }, (_, i) => {
+        const ratio = i / (grid - 1);
+        const y = top + ratio * innerH;
+        const value = max - ratio * span;
+        return `
+          <line x1="${left}" y1="${y}" x2="${width - right}" y2="${y}" stroke="#e4e4e7" />
+          <text x="${left - 12}" y="${y + 4}" text-anchor="end" fill="#71717a" font-size="11">${formatMetric(value)}</text>
+        `;
+      }).join("");
+
+      const xLabels = points.map((point, index) => `
+        <text x="${point.x}" y="${height - 16}" text-anchor="middle" fill="#71717a" font-size="11">${index === 0 ? "BASE" : point.id.replace("EXP-", "E")}</text>
+      `).join("");
+
+      const labels = points
+        .filter((point) => point.improved)
+        .map((point) => `
+          <text x="${point.x}" y="${Math.max(top + 12, point.y - 14)}" text-anchor="middle" fill="#09090b" font-size="11">${point.id}</text>
+        `)
+        .join("");
+
+      const dots = points.map((point, index) => {
+        const fill = point.status === "KEPT" || point.status === "BASELINE" ? "#09090b" : "#ffffff";
+        return `
+          <circle
+            cx="${point.x}"
+            cy="${point.y}"
+            r="${state.selectedId === point.id ? 7 : 5}"
+            fill="${fill}"
+            stroke="#09090b"
+            stroke-width="1.5"
+            data-point-index="${index}"
+            tabindex="0"
+          />
+        `;
+      }).join("");
+
+      svg.innerHTML = `
+        ${gridLines}
+        <line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" stroke="#18181b" />
+        <line x1="${left}" y1="${top}" x2="${left}" y2="${height - bottom}" stroke="#18181b" />
+        <path d="${path}" fill="none" stroke="#09090b" stroke-width="2" />
+        ${dots}
+        ${labels}
+        ${xLabels}
+      `;
+
+      svg.querySelectorAll("[data-point-index]").forEach((node) => {
+        const index = Number(node.getAttribute("data-point-index"));
+        const point = points[index];
+        const show = (event) => {
+          tooltip.innerHTML = `
+            <strong>${point.id}</strong>
+            score: ${formatMetric(point.result)}<br>
+            time: ${formatDuration(point.duration_ms)}<br>
+            status: ${point.status || "UNKNOWN"}<br>
+            ${point.improved ? "improved champion" : "did not improve champion"}
+          `;
+          const bounds = svg.getBoundingClientRect();
+          tooltip.style.left = `${point.x / width * bounds.width + 12}px`;
+          tooltip.style.top = `${point.y / height * bounds.height + 12}px`;
+          tooltip.style.display = "block";
+        };
+        node.addEventListener("mouseenter", show);
+        node.addEventListener("focus", show);
+        node.addEventListener("mouseleave", () => tooltip.style.display = "none");
+        node.addEventListener("blur", () => tooltip.style.display = "none");
+        node.addEventListener("click", () => selectRow(point.id));
+      });
+    }
+
+    async function loadDiffFiles(row) {
+      const key = `${row.parent_commit}:${row.candidate_commit}`;
+      if (state.diffFilesCache[key]) return state.diffFilesCache[key];
+      const base = encodeURIComponent(row.parent_commit);
+      const head = encodeURIComponent(row.candidate_commit);
+      const payload = await fetchJson(`./api/diff-files?base=${base}&head=${head}`);
+      state.diffFilesCache[key] = payload.files || [];
+      return state.diffFilesCache[key];
+    }
+
+    async function loadDiffText(row, file) {
+      const key = `${row.parent_commit}:${row.candidate_commit}:${file}`;
+      if (state.diffTextCache[key]) return state.diffTextCache[key];
+      const base = encodeURIComponent(row.parent_commit);
+      const head = encodeURIComponent(row.candidate_commit);
+      const pathValue = encodeURIComponent(file);
+      const payload = await fetchJson(`./api/diff?base=${base}&head=${head}&file=${pathValue}`);
+      state.diffTextCache[key] = payload.diff || "";
+      return state.diffTextCache[key];
+    }
+
+    function renderDiffText(text) {
+      if (!text) return `<div class="empty" style="margin: 16px;">No diff output returned for this file.</div>`;
+      const lines = text.split(/\r?\n/).map((line) => {
+        let cls = "context";
+        if (line.startsWith("diff --git") || line.startsWith("--- ") || line.startsWith("+++ ")) cls = "meta";
+        else if (line.startsWith("@@")) cls = "hunk";
+        else if (line.startsWith("+")) cls = "added";
+        else if (line.startsWith("-")) cls = "removed";
+        return `<div class="diff-line ${cls}">${escapeHtml(line || " ")}</div>`;
+      }).join("");
+      return `<div class="diff-lines">${lines}</div>`;
+    }
+
+    async function renderDiff(row) {
+      const panel = document.getElementById("diffPanel");
+      const meta = document.getElementById("diffMeta");
+      if (!row || !row.parent_commit || !row.candidate_commit) {
+        meta.textContent = "Select a run with commit metadata";
+        panel.innerHTML = `<div class="empty" style="margin: 16px;">This run does not include commit metadata, so the dashboard cannot compute a git diff for it yet.</div>`;
+        return;
+      }
+
+      meta.textContent = `${row.parent_commit.slice(0, 7)} → ${row.candidate_commit.slice(0, 7)}`;
+      panel.innerHTML = `
+        <div class="diff-files" id="diffFiles"><div class="empty" style="margin: 16px;">Loading files…</div></div>
+        <div class="diff-view">
+          <div class="diff-meta" id="diffFileMeta">Loading diff…</div>
+          <div id="diffText">${renderDiffText("")}</div>
+        </div>
+      `;
+
+      try {
+        const files = await loadDiffFiles(row);
+        if (state.selectedId !== row.id) return;
+        if (!files.length) {
+          document.getElementById("diffFiles").innerHTML = `<div class="empty" style="margin: 16px;">No changed files found between these commits.</div>`;
+          document.getElementById("diffFileMeta").textContent = "No diff available";
+          document.getElementById("diffText").innerHTML = `<div class="empty" style="margin: 16px;">git diff returned no changed files for this experiment.</div>`;
+          return;
+        }
+
+        const currentSelected = state.selectedFileByRun[row.id];
+        const selectedFile = files.includes(currentSelected) ? currentSelected : files[0];
+        state.selectedFileByRun[row.id] = selectedFile;
+
+        document.getElementById("diffFiles").innerHTML = files.map((file) => `
+          <button class="diff-file-button ${file === selectedFile ? "is-selected" : ""}" data-diff-file="${escapeHtml(file)}">${escapeHtml(file)}</button>
+        `).join("");
+
+        const wireFileSelection = () => {
+          document.querySelectorAll("[data-diff-file]").forEach((button) => {
+            button.addEventListener("click", async () => {
+              state.selectedFileByRun[row.id] = button.getAttribute("data-diff-file");
+              await renderDiff(row);
+            });
+          });
+        };
+
+        wireFileSelection();
+        document.getElementById("diffFileMeta").textContent = selectedFile;
+        const diff = await loadDiffText(row, selectedFile);
+        if (state.selectedId !== row.id) return;
+        document.getElementById("diffText").innerHTML = renderDiffText(diff);
+        wireFileSelection();
+      } catch (error) {
+        if (state.selectedId !== row.id) return;
+        document.getElementById("diffFiles").innerHTML = `<div class="empty" style="margin: 16px;">Diff lookup failed.</div>`;
+        document.getElementById("diffFileMeta").textContent = "Diff unavailable";
+        document.getElementById("diffText").innerHTML = `<div class="empty" style="margin: 16px;">${escapeHtml(String(error.message || error))}</div>`;
+      }
+    }
+
+    function selectRow(id, rerender = true) {
+      state.selectedId = id;
+      const row = state.allRows.find((item) => item.id === id) || null;
+      renderDetails(row);
+      renderDiff(row);
+      if (rerender) {
+        renderHistory(state.allRows);
+      }
+      document.getElementById("selectionHint").textContent = id ? `Selected ${id}` : "Hover a dot or row";
+    }
+
+    async function boot() {
+      try {
+        const data = await loadData();
+        const rows = buildRows(data);
+        state.allRows = rows;
+        renderHeader(data);
+        renderStats(data, rows);
+        renderPrimer(data, rows);
+        renderChart(rows, scoreDirection(data));
+        renderHistory(rows);
+
+        if (!state.selectedId && rows.length) {
+          selectRow(rows[rows.length - 1].id);
+        } else if (state.selectedId) {
+          selectRow(state.selectedId);
+        } else {
+          renderDetails(null);
+          renderDiff(null);
+        }
+
+        document.getElementById("footnote").textContent =
+          `Dashboard reads progress.json every 5 seconds. Total measured runtime: ${formatDuration(totalDuration(rows))}.`;
+      } catch (error) {
+        document.getElementById("goal").textContent = "Dashboard unavailable";
+        document.getElementById("subline").textContent = String(error);
+      }
+    }
+
+    boot();
+    setInterval(boot, 5000);
+  </script>
+</body>
+</html>
