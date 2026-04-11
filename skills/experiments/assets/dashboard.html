@@ -503,7 +503,7 @@
       <div class="header">
         <div class="kicker">Experiments / Dashboard</div>
         <h1 id="goal">Loading…</h1>
-        <div class="subline" id="subline">Waiting for progress.json.</div>
+        <div class="subline" id="subline">Waiting for autoresearch.jsonl.</div>
       </div>
       <div class="stats" id="stats"></div>
     </section>
@@ -512,7 +512,7 @@
       <div class="primer-copy">
         <div class="primer-title">How To Read This</div>
         <div class="primer-text" id="primerSummary">
-          Waiting for progress.json.
+          Waiting for autoresearch.jsonl.
         </div>
       </div>
       <div class="primer-terms">
@@ -588,7 +588,7 @@
       </div>
     </section>
 
-    <div class="footnote" id="footnote">Dashboard reads progress.json every 5 seconds.</div>
+    <div class="footnote" id="footnote">Dashboard reads autoresearch.jsonl via the state API every 5 seconds.</div>
   </main>
 
   <script>
@@ -605,16 +605,13 @@
     };
 
     async function loadData() {
-      const response = await fetch("./progress.json?ts=" + Date.now());
-      if (!response.ok) throw new Error("Failed to load progress.json");
+      const response = await fetch("./api/state?ts=" + Date.now());
+      if (!response.ok) throw new Error("Failed to load autoresearch state");
       return response.json();
     }
 
     async function loadCurrentRun() {
-      const response = await fetch("./.experiment-logs/current-run.json?ts=" + Date.now(), { cache: "no-store" });
-      if (response.status === 404) return null;
-      if (!response.ok) throw new Error("Failed to load current-run.json");
-      return response.json();
+      return null;
     }
 
     function num(value) {
@@ -726,7 +723,7 @@
       if (name === "eval.log") return "See eval log";
       if (name === "metric.txt") return "See metric";
       if (name === "summary.json") return "See summary";
-      if (normalized.includes(".experiment-logs/") && name.endsWith(".log")) return "See runner log";
+      if ((normalized.includes(".experiment-logs/") || normalized.includes(".autoresearch-logs/")) && name.endsWith(".log")) return "See run log";
       if (name.endsWith(".raw")) return "See raw transcript";
       if (name.endsWith(".txt")) return "See final message";
       return `See ${name || "artifact"}`;
@@ -734,7 +731,7 @@
 
     function isRunnerOutputPath(pathValue) {
       const normalized = String(pathValue || "").replaceAll("\\", "/").toLowerCase();
-      return normalized.includes(".experiment-logs/")
+      return (normalized.includes(".experiment-logs/") || normalized.includes(".autoresearch-logs/"))
         && (normalized.endsWith(".log") || normalized.endsWith(".txt") || normalized.endsWith(".raw"));
     }
 
@@ -1377,7 +1374,7 @@
         }
 
         document.getElementById("footnote").textContent =
-          `Dashboard reads progress.json and current-run.json every 5 seconds. Selected runner output refreshes on the same cadence while a run is active. Total measured runtime: ${formatDuration(totalDuration(rows))}. Artifact links open from recorded log paths.`;
+          `Dashboard reads autoresearch.jsonl-derived state every 5 seconds. Selected runner output refreshes on the same cadence while a run is active. Total measured runtime: ${formatDuration(totalDuration(rows))}. Artifact links open from recorded log paths.`;
       } catch (error) {
         document.getElementById("goal").textContent = "Dashboard unavailable";
         document.getElementById("subline").textContent = String(error);

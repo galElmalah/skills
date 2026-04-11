@@ -1,0 +1,9 @@
+node_modules/
+**/.autoresearch-logs/
+**/.eval-logs/
+**/autoresearch.jsonl
+**/autoresearch.md
+**/autoresearch.sh
+**/autoresearch.checks.sh
+**/autoresearch.ideas.md
+**/groups.json
