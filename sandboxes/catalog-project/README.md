@@ -2,7 +2,7 @@
 
 Small Node project with intentionally bad production code paths.
 
-Use it to test the `experiments` skill against a latency-style metric.
+Use it to test `autoresearch-create` against a latency-style metric.
 
 ## Goal
 
@@ -12,7 +12,7 @@ Create a cheap benchmark with the skill, then reduce runtime without changing ob
 
 This project does not ship a benchmark harness.
 
-Use the `experiments` skill to define and scaffold the first cheap benchmark, then freeze it before you start mutating the catalog logic.
+Use `autoresearch-create` to define and scaffold the first cheap benchmark, then freeze it before you start mutating the catalog logic.
 
 Suggested scalar metric once the harness exists:
 

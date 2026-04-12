@@ -2,5 +2,5 @@
   "name": "catalog-project",
   "private": true,
   "version": "0.0.0",
-  "description": "Dummy project with intentionally inefficient code paths for experiments."
+  "description": "Dummy project with intentionally inefficient code paths for autoresearch."
 }

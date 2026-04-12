@@ -7,6 +7,8 @@ description: Primary autoresearch entrypoint. Use when the user wants to start a
 
 Set up an autoresearch session, log the baseline, and start the loop.
 
+This is the single entrypoint for metric-driven optimization in this repo.
+
 ## Workflow
 
 1. Infer or ask for:
@@ -51,11 +53,23 @@ autoresearch log --workdir <target-dir> --status discard --description "Baseline
 The first logged run becomes the baseline even if its status is `discard`.
 
 8. Copy the shared loop assets into the target dir:
-   - `skills/experiments/assets/loop.sh`
-   - `skills/experiments/assets/validate-runners.sh`
-   - `skills/experiments/assets/runners/`
+   - `skills/autoresearch-create/assets/loop.sh`
+   - `skills/autoresearch-create/assets/validate-runners.sh`
+   - `skills/autoresearch-create/assets/runners/`
 9. Validate the selected runner.
 10. Start the loop.
+
+## Methodology Defaults
+
+Use these defaults unless the repo or user gives a better contract:
+
+- Prefer an existing validated benchmark over inventing a new one.
+- If no benchmark exists, create the cheapest trustworthy one first.
+- If the benchmark can overfit, define a fuller holdout eval before a long run.
+- If correctness can regress, require checks before `keep`.
+- Treat tiny wins as suspicious until confirmed against the current champion.
+- Prefer champion-relative decisions over thresholds anchored to the original baseline.
+- Keep exactly one mutation per iteration.
 
 ## `autoresearch.md`
 

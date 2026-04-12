@@ -8,7 +8,6 @@ Hybrid `autoresearch` runtime plus agent skills for iterative coding workflows.
 | --- | --- |
 | [autoresearch-create](skills/autoresearch-create) | Primary entrypoint for creating an autoresearch session, scaffolding the session files, running the baseline, and starting the loop. |
 | [autoresearch-finalize](skills/autoresearch-finalize) | Turns kept autoresearch runs into clean, reviewable branches from the merge-base. |
-| [experiments](skills/experiments) | Secondary guidance skill for metric design, noise handling, holdouts, and advanced experiment methodology. |
 | [pr-comments](skills/pr-comments) | Processes PR review comments with parallel analysis and sequential resolution. |
 | [ralph-loop](skills/ralph-loop) | Scaffolds a task-oriented loop that repeatedly picks the next unfinished work item until the backlog is complete. |
 
@@ -21,7 +20,7 @@ It is a hybrid package:
 - a small runtime CLI that owns session state, run logging, keep/discard behavior, export, and finalize
 - skills that set up the session and guide the agent through the loop
 
-This is intentionally closer to `pi-autoresearch` than to the old `experiments` scaffolding model.
+This is intentionally closer to `pi-autoresearch` than to the older scaffolding-only model.
 
 ### Runtime Files
 
@@ -87,7 +86,7 @@ node ./bin/autoresearch.js export --workdir /path/to/project
 
 ### Multi-runner Support
 
-The shared runner adapters live in [skills/experiments/assets/runners](skills/experiments/assets/runners).
+The shared runner adapters live in [skills/autoresearch-create/assets/runners](skills/autoresearch-create/assets/runners).
 
 Supported runners:
 
@@ -99,21 +98,8 @@ Supported runners:
 Validate a runner before a long loop:
 
 ```bash
-bash skills/experiments/assets/validate-runners.sh
+bash skills/autoresearch-create/assets/validate-runners.sh
 ```
-
-## Experiments
-
-`experiments` still exists, but it is no longer the primary product surface.
-
-Keep using it when you need:
-
-- metric design guidance
-- noise and confirmation policy
-- holdout-eval recommendations
-- advanced experiment methodology
-
-For new sessions, prefer `autoresearch-create`.
 
 ## Experiment Sandboxes
 

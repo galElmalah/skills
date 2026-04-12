@@ -65,7 +65,7 @@ function openBrowser(url) {
 }
 
 function dashboardAssetPath() {
-  return path.resolve(__dirname, "../../skills/experiments/assets/dashboard.html");
+  return path.resolve(__dirname, "../../skills/autoresearch-create/assets/dashboard.html");
 }
 
 function startDashboardServer(workDir, options = {}) {
