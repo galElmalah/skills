@@ -9,6 +9,7 @@ Curated agent skills for iterative coding workflows.
 | [experiments](skills/experiments) | Sets up and runs a champion-based experiment loop for optimizing a single metric over time. It helps define the metric, bootstrap a cheap benchmark, scaffold the loop, and keep or discard changes based on measured results. |
 | [pr-comments](skills/pr-comments) | Processes PR review comments with parallel analysis and sequential resolution. |
 | [ralph-loop](skills/ralph-loop) | Scaffolds a task-oriented loop that repeatedly picks the next unfinished work item until the backlog is complete. |
+| [ui-pr](skills/ui-pr) | Captures and attaches current UI evidence for pull requests with user-visible changes. |
 
 ## Experiment Sandboxes
 

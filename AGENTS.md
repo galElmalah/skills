@@ -17,6 +17,7 @@ skills/
 |-------|-------------|
 | [pr-comments](skills/pr-comments) | Process PR review comments with parallel analysis and sequential resolution. Fetches comments, checks each against current code, then walks through unaddressed ones with proposed fixes. |
 | [ralph-loop](skills/ralph-loop) | Automated agent loop that works through a list of tasks iteratively. Scaffolds a bash harness that runs Claude repeatedly, picking up the next work item each iteration until all items are complete. |
+| [ui-pr](skills/ui-pr) | Capture and attach current UI evidence for pull requests with user-visible changes. |
 
 ## Conventions
 
