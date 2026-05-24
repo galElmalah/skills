@@ -15,10 +15,13 @@ skills/
 
 | Skill | Description |
 |-------|-------------|
-| [autoresearch-create](skills/autoresearch-create) | Primary autoresearch entrypoint. Scaffolds `autoresearch.md`, `autoresearch.sh`, initializes the session, logs the baseline, and starts the loop. |
-| [autoresearch-finalize](skills/autoresearch-finalize) | Finalizes kept autoresearch runs into clean reviewable branches from the merge-base. |
+| [handoff](skills/handoff) | Write a focused handoff note so a different agent (Codex, Cursor, another Claude) can resume the session. Resolves the canonical project root via `git rev-parse --git-common-dir` so handoffs are visible across all worktrees of the same repo. |
+| [pickup](skills/pickup) | Read the latest handoff for this project and brief the user before resuming. Uses the same worktree-aware path resolution as `handoff`. |
 | [pr-comments](skills/pr-comments) | Process PR review comments with parallel analysis and sequential resolution. Fetches comments, checks each against current code, then walks through unaddressed ones with proposed fixes. |
 | [ralph-loop](skills/ralph-loop) | Automated agent loop that works through a list of tasks iteratively. Scaffolds a bash harness that runs Claude repeatedly, picking up the next work item each iteration until all items are complete. |
+| [ui-pr](skills/ui-pr) | Capture and attach current UI evidence for pull requests with user-visible changes. |
+| [autoresearch-create](skills/autoresearch-create) | Primary autoresearch entrypoint. Scaffolds `autoresearch.md`, `autoresearch.sh`, initializes the session, logs the baseline, and starts the loop. See [experiments/](experiments) for the full autoresearch story. |
+| [autoresearch-finalize](skills/autoresearch-finalize) | Finalizes kept autoresearch runs into clean reviewable branches from the merge-base. |
 
 ## Conventions
 
