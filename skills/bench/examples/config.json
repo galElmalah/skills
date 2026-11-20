@@ -1,0 +1,96 @@
+{
+  "id": "file-lookup",
+  "title": "File lookup experiment",
+  "description": "A real, deliberately tiny file-lookup fixture for learning the toolkit. These timings are not application performance claims.",
+  "mainMetricId": "latency",
+  "metrics": [
+    {
+      "id": "latency",
+      "label": "p95 latency",
+      "description": "Wall time in milliseconds of each in-process file lookup, including validation; p95 interpolated over raw compatible requests within each repeat. Process startup is outside the timer.",
+      "unit": "ms",
+      "direction": "lower",
+      "role": "objective",
+      "aggregation": "p95",
+      "minImprovementPct": 5,
+      "format": {
+        "precision": 3,
+        "style": "number"
+      }
+    },
+    {
+      "id": "io",
+      "label": "File reads / request",
+      "description": "Application-instrumented read_text calls per request, not kernel syscalls. Each request is one raw observation.",
+      "unit": "reads/req",
+      "direction": "lower",
+      "role": "objective",
+      "aggregation": "mean",
+      "minImprovementPct": 5,
+      "format": {
+        "precision": 3,
+        "style": "number"
+      }
+    },
+    {
+      "id": "memory",
+      "label": "Peak allocated memory",
+      "description": "Python tracemalloc peak megabytes per case. A guardrail for this tiny fixture, not process RSS.",
+      "unit": "MB",
+      "direction": "lower",
+      "role": "guardrail",
+      "aggregation": "median",
+      "minImprovementPct": 0,
+      "target": 8,
+      "format": {
+        "precision": 2,
+        "style": "number"
+      }
+    },
+    {
+      "id": "errors",
+      "label": "Incorrect results",
+      "description": "A raw 0/1 correctness indicator per lookup; mean is an error fraction from 0 to 1.",
+      "unit": "ratio",
+      "direction": "lower",
+      "role": "guardrail",
+      "aggregation": "rate",
+      "minImprovementPct": 0,
+      "target": 0,
+      "format": {
+        "precision": 3,
+        "style": "number"
+      }
+    }
+  ],
+  "scopes": [
+    {
+      "id": "small",
+      "label": "Small objects",
+      "kind": "workload",
+      "weight": 0.6,
+      "description": "Repeated reads of small objects."
+    },
+    {
+      "id": "medium",
+      "label": "Medium objects",
+      "kind": "workload",
+      "weight": 0.3,
+      "description": "Repeated reads of medium objects."
+    },
+    {
+      "id": "large",
+      "label": "Large objects",
+      "kind": "workload",
+      "weight": 0.1,
+      "description": "Repeated reads of larger objects."
+    }
+  ],
+  "protocol": {
+    "seed": 42,
+    "repetitions": 3,
+    "warmups": 1,
+    "timeoutSeconds": 10,
+    "measurementWorkers": 1
+  }
+}

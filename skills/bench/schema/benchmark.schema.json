@@ -1,0 +1,701 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bench.local/schema/benchmark.schema.json",
+  "title": "BenchmarkStudy",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repository": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "baselineCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40,64}$"
+        },
+        "championCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40,64}$"
+        },
+        "championBranch": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "baselineCommit",
+        "championCommit",
+        "championBranch"
+      ],
+      "additionalProperties": false
+    },
+    "protocol": {
+      "$ref": "#/$defs/Protocol"
+    },
+    "protocolHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "mainMetricId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$",
+      "description": "The objective metric this study aims to improve. Frozen with the evaluation protocol."
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Metric"
+      },
+      "minItems": 1
+    },
+    "scopes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Scope"
+      },
+      "minItems": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Case"
+      },
+      "minItems": 1
+    },
+    "suites": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Suite"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "experiments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Experiment"
+      },
+      "minItems": 1
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Run"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "description",
+    "createdAt",
+    "updatedAt",
+    "repository",
+    "protocol",
+    "protocolHash",
+    "metrics",
+    "scopes",
+    "cases",
+    "suites",
+    "experiments",
+    "runs"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "Metric": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "lower",
+            "higher"
+          ]
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "objective",
+            "guardrail",
+            "diagnostic"
+          ]
+        },
+        "aggregation": {
+          "type": "string",
+          "enum": [
+            "mean",
+            "median",
+            "p95",
+            "sum",
+            "rate"
+          ]
+        },
+        "observationPolicy": {
+          "type": "string",
+          "enum": [
+            "matched",
+            "variable"
+          ]
+        },
+        "minImprovementPct": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxRegressionPct": {
+          "type": "number",
+          "minimum": 0
+        },
+        "target": {
+          "type": "number"
+        },
+        "scopeIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "format": {
+          "type": "object",
+          "properties": {
+            "precision": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "style": {
+              "type": "string",
+              "enum": [
+                "number",
+                "percent",
+                "currency"
+              ]
+            }
+          },
+          "required": [
+            "precision",
+            "style"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "unit",
+        "direction",
+        "role",
+        "aggregation",
+        "minImprovementPct",
+        "format"
+      ],
+      "additionalProperties": false
+    },
+    "Scope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "endpoint",
+            "workload",
+            "system"
+          ]
+        },
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "kind",
+        "weight",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "Case": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "group": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "scopeId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "partition": {
+          "type": "string",
+          "enum": [
+            "train",
+            "heldout"
+          ]
+        },
+        "input": {}
+      },
+      "required": [
+        "id",
+        "group",
+        "scopeId",
+        "partition",
+        "input"
+      ],
+      "additionalProperties": false
+    },
+    "Suite": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": [
+            "screen",
+            "full",
+            "heldout"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "caseIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "caseIds"
+      ],
+      "additionalProperties": false
+    },
+    "Event": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "created",
+            "snapshot",
+            "run",
+            "decision",
+            "promotion",
+            "note"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "timestamp",
+        "kind",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "Artifact": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "diff",
+            "log",
+            "trace",
+            "profile",
+            "report",
+            "other"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "Experiment": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "parentId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parentCommit": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40,64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40,64}$"
+        },
+        "contributionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+          },
+          "uniqueItems": true,
+          "description": "Experiments whose changes were explicitly incorporated into this snapshot, distinct from its starting parent. Omitted means no contributions are recorded."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "planned",
+            "running",
+            "measured",
+            "failed",
+            "promoted",
+            "discarded"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "hypothesis": {
+          "type": "string"
+        },
+        "change": {
+          "type": "string"
+        },
+        "decision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "worktree": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Event"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "parentId",
+        "parentCommit",
+        "commit",
+        "status",
+        "createdAt",
+        "hypothesis",
+        "change",
+        "decision",
+        "worktree",
+        "branch",
+        "artifacts",
+        "events"
+      ],
+      "additionalProperties": false
+    },
+    "Sample": {
+      "type": "object",
+      "properties": {
+        "caseId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "scopeId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warmup": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "error",
+            "timeout"
+          ]
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 1,
+                "maxItems": 100000
+              }
+            ]
+          }
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "caseId",
+        "scopeId",
+        "repeat",
+        "warmup",
+        "status",
+        "metrics",
+        "durationMs",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "Run": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "experimentId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,79}$"
+        },
+        "suiteId": {
+          "type": "string",
+          "enum": [
+            "screen",
+            "full",
+            "heldout"
+          ]
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40,64}$"
+        },
+        "protocolHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "running",
+            "completed",
+            "failed"
+          ]
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Sample"
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "logPath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "experimentId",
+        "suiteId",
+        "commit",
+        "protocolHash",
+        "startedAt",
+        "endedAt",
+        "status",
+        "samples",
+        "environment",
+        "command",
+        "logPath"
+      ],
+      "additionalProperties": false
+    },
+    "Protocol": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "repetitions": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 10000
+        },
+        "warmups": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "timeoutSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "measurementWorkers": {
+          "const": 1
+        },
+        "splitHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "seed",
+        "repetitions",
+        "warmups",
+        "timeoutSeconds",
+        "measurementWorkers",
+        "splitHash"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

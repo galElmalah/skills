@@ -2,7 +2,7 @@
 
 Small Node project with intentionally slow tests caused by multiple independent problems.
 
-Use it to test the `experiments` skill against test-runtime optimization.
+Use it to test the `bench` skill against test-runtime optimization.
 
 ## Goal
 
@@ -16,12 +16,12 @@ This project keeps only the ordinary test command:
 npm test
 ```
 
-Use the `experiments` skill to turn that into a cheap repeatable benchmark or eval command.
+Use the `bench` skill to turn that into a cheap repeatable benchmark or eval command.
 
 Suggested scalar metric once the harness exists:
 
 - metric: `test_runtime_ms`
-- direction: `min`
+- direction: `lower`
 
 ## Why The Tests Are Slow
 

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "small-0",
+    "group": "small-family-0",
+    "scopeId": "small",
+    "partition": "train",
+    "input": {
+      "bytes": 1024,
+      "requests": 100
+    }
+  },
+  {
+    "id": "small-1",
+    "group": "small-family-1",
+    "scopeId": "small",
+    "partition": "train",
+    "input": {
+      "bytes": 1152,
+      "requests": 107
+    }
+  },
+  {
+    "id": "small-2",
+    "group": "small-family-2",
+    "scopeId": "small",
+    "partition": "train",
+    "input": {
+      "bytes": 1280,
+      "requests": 114
+    }
+  },
+  {
+    "id": "small-3",
+    "group": "small-family-3",
+    "scopeId": "small",
+    "partition": "heldout",
+    "input": {
+      "bytes": 1408,
+      "requests": 121
+    }
+  },
+  {
+    "id": "small-4",
+    "group": "small-family-4",
+    "scopeId": "small",
+    "partition": "heldout",
+    "input": {
+      "bytes": 1536,
+      "requests": 128
+    }
+  },
+  {
+    "id": "medium-0",
+    "group": "medium-family-0",
+    "scopeId": "medium",
+    "partition": "train",
+    "input": {
+      "bytes": 32768,
+      "requests": 100
+    }
+  },
+  {
+    "id": "medium-1",
+    "group": "medium-family-1",
+    "scopeId": "medium",
+    "partition": "train",
+    "input": {
+      "bytes": 32896,
+      "requests": 107
+    }
+  },
+  {
+    "id": "medium-2",
+    "group": "medium-family-2",
+    "scopeId": "medium",
+    "partition": "train",
+    "input": {
+      "bytes": 33024,
+      "requests": 114
+    }
+  },
+  {
+    "id": "medium-3",
+    "group": "medium-family-3",
+    "scopeId": "medium",
+    "partition": "heldout",
+    "input": {
+      "bytes": 33152,
+      "requests": 121
+    }
+  },
+  {
+    "id": "medium-4",
+    "group": "medium-family-4",
+    "scopeId": "medium",
+    "partition": "heldout",
+    "input": {
+      "bytes": 33280,
+      "requests": 128
+    }
+  },
+  {
+    "id": "large-0",
+    "group": "large-family-0",
+    "scopeId": "large",
+    "partition": "train",
+    "input": {
+      "bytes": 262144,
+      "requests": 100
+    }
+  },
+  {
+    "id": "large-1",
+    "group": "large-family-1",
+    "scopeId": "large",
+    "partition": "train",
+    "input": {
+      "bytes": 262272,
+      "requests": 107
+    }
+  },
+  {
+    "id": "large-2",
+    "group": "large-family-2",
+    "scopeId": "large",
+    "partition": "train",
+    "input": {
+      "bytes": 262400,
+      "requests": 114
+    }
+  },
+  {
+    "id": "large-3",
+    "group": "large-family-3",
+    "scopeId": "large",
+    "partition": "heldout",
+    "input": {
+      "bytes": 262528,
+      "requests": 121
+    }
+  },
+  {
+    "id": "large-4",
+    "group": "large-family-4",
+    "scopeId": "large",
+    "partition": "heldout",
+    "input": {
+      "bytes": 262656,
+      "requests": 128
+    }
+  }
+]

@@ -1,0 +1,6 @@
+interface:
+  display_name: "bench"
+  short_description: "Run isolated experiments and explain measured improvements"
+  icon_large: "./assets/bench-logo.png"
+  brand_color: "#f7add2"
+  default_prompt: "Use $bench to define an optimization study, run isolated experiments, and open the interactive study widget with bench_open_study when available."
